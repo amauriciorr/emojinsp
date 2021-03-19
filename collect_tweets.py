@@ -18,10 +18,16 @@ class TwitterListener(StreamListener):
     def on_status(self, status):
         self.tweet_count += 1
         if self.tweet_count < self.interval_size:
-            if not status.truncated:
-                tweet = status.text
+            if hasattr(status, 'retweeted_status'):
+                try:
+                    tweet = status.retweeted_status.extended_tweet["full_text"]
+                except:
+                    tweet = status.retweeted_status.text
             else:
-                tweet = status.extended_tweet['full_text']
+                try:
+                    tweet = status.extended_tweet["full_text"]
+                except AttributeError:
+                    tweet = status.text
             print(tweet)
             with open('tweets.txt', 'a') as file:
                 file.write(tweet+' <end_of_tweet>\n')
