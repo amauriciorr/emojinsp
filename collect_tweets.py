@@ -18,7 +18,10 @@ class TwitterListener(StreamListener):
     def on_status(self, status):
         self.tweet_count += 1
         if self.tweet_count < self.interval_size:
-            tweet = status.text
+            if not status.truncated:
+                tweet = status.text
+            else:
+                tweet = status.extended_tweet['full_text']
             print(tweet)
             with open('tweets.txt', 'a') as file:
                 file.write(tweet+' <end_of_tweet>\n')
