@@ -31,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('--interval_size', 
                         type=int, 
                         help='Amount of tweets to collect for each emoji chunk.',
-                        default=100)
+                        default=500)
     parser.add_argument('--sleep_time',
                         type=int,
                         help='Amount of time (in seconds) to sleep between each chunk.\
@@ -47,18 +47,20 @@ if __name__ == '__main__':
     # 400 emojis at a time is the threshold before receiving
     # a 413-status error ('request too large')
     emoji_chunks = list(chunks(emojis, 400))
-    for chunk in emoji_chunks:
-        auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-        auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-        api = API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-        # stream = Stream(auth=api.auth, listener=Listener())
-        stream = Stream(auth=api.auth, listener=TwitterListener(interval_size=args.interval_size))
-        try:
+    try:
+        for chunk in emoji_chunks:
+            auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+            auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+            api = API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+            # stream = Stream(auth=api.auth, listener=Listener())
+            stream = Stream(auth=api.auth, listener=TwitterListener(interval_size=args.interval_size))
             print('{} | Started streaming...'.format(dt.now()))
             stream.filter(languages=['en'], track=chunk)
-        except KeyboardInterrupt:
-            print('{} | Stopped streaming.'.format(dt.now()))
-        finally:
             stream.disconnect()
-        time.sleep(args.sleep_time)
-        print('{} | Proceeding to next chunk. Sleeping for {} seconds first...'.format(dt.now(), args.sleep_time))
+            print('{} | Proceeding to next chunk. Sleeping for {} seconds first...'.format(dt.now(), args.sleep_time))
+            time.sleep(args.sleep_time)
+        print('{} | Finished streaming.'.format(dt.now()))
+    except KeyboardInterrupt:
+        print('{} | Stopped streaming.'.format(dt.now()))
+
+
