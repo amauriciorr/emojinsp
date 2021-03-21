@@ -10,6 +10,10 @@ USER_HANDLE_REGEX = re.compile(r'@[\w\d]+')
 HASHTAG_REGEX = re.compile(r'#[\w\d]+')
 
 def get_raw_tweets(file='tweets.txt'):
+    '''
+    function for simply loading raw tweets file
+    and splitting tweets at delimiter
+    '''
     text_file = open(file)
     raw_tweets = text_file.read()
     text_file.close()
@@ -17,6 +21,13 @@ def get_raw_tweets(file='tweets.txt'):
     return raw_tweets
 
 def keep_tweet(tweet):
+    '''
+    current criteria for dropping or keeping a tweet
+    can be amended but for now: we exclude hashtags as they are OOV,
+    exclude tweets referencing URLs as the content of the tweets
+    are most likely tied to the links, and drop tweets less than 3
+    words.
+    '''
     keep = True
     if URL_REGEX.search(tweet) or HASHTAG_REGEX.search(tweet):
         keep = False
@@ -25,34 +36,56 @@ def keep_tweet(tweet):
     return keep
 
 def create_emoji_sentence(tweet, emoji_regex):
+    '''
+    extract emojis used in a sentence to create associated "emoji sentence"
+    '''
     emojis = emoji_regex.findall(tweet)
     emoji_sentence = ''.join(emojis)
     return emoji_sentence
 
 def clean_tweet(tweet, emoji_regex):
+    '''
+    cosmetic adjustments to tweet. replace user-handles with [USER] token
+    we may want to add special token to embedding representations, 
+    remove emojis from original tweet (only to appear in emoji sentence counterpart),
+    remove newline characters.
+    '''
     cleaned_tweet = emoji_regex.sub('', tweet)
     cleaned_tweet = re.sub(r'\n', '', cleaned_tweet)
     cleaned_tweet = USER_HANDLE_REGEX.sub('[USER]', cleaned_tweet)
     return cleaned_tweet
 
 def create_df(raw_tweets, emoji_regex):
+    '''
+    combine above helper functions to create a base emoji df
+    '''
     print('{} | Loading tweets file'.format(dt.now()))
     tweet_df = pd.DataFrame({'tweets': raw_tweets})
     print('{} | Started with {} tweets'.format(dt.now(), tweet_df.shape[0]))
+
     print('{} | Dropping duplicates and unusable tweets.'.format(dt.now()))
     tweet_filter = tweet_df.tweets.map(keep_tweet)
     filtered_df = tweet_df[tweet_filter].copy()
     filtered_df.drop_duplicates(inplace=True)
     print('{} | Ending with {} tweets'.format(dt.now(), filtered_df.shape[0]))
+
     print('{} | Creating emoji sentence'.format(dt.now()))
     filtered_df['emoji_sentence'] = filtered_df.tweets.apply(lambda row: create_emoji_sentence(row, emoji_regex))
+
     print('{} | Cleaning tweets'.format(dt.now()))
     filtered_df['tweets'] = filtered_df.tweets.apply(lambda row: clean_tweet(row, emoji_regex))
     print('{} | Complete.'.format(dt.now()))
+
     return filtered_df
     filtered_df.to_csv('processed_tweets.csv', index=False)
 
 def shuffle_pairs(tweet, df, index):
+    '''
+    helper function to shuffle tweet-emoji sentence pairs to create "incorrect" sentence pairs.
+    shuffling here ensures to avoid randomly pairing a tweet with emojis that overlap
+    with its original emoji sentence. it's a simple approach and not guaranteed to manufacture
+    'contradiction' but hopefully will help.
+    '''
     correct_pair = set(list(tweet))
     similar = True
     while similar:
@@ -64,6 +97,10 @@ def shuffle_pairs(tweet, df, index):
     return incorrect_pair
 
 def create_shuffled_df(df):
+    '''
+    Copy original emoji-sentence df to create a shuffled/incorrect counterpart, meant to be merged with
+    original df.
+    '''
     shuffled_df = df.copy()
     df_index = len(shuffled_df.index)
     print('{} | Creating incorrect sentence pairs'.format(dt.now()))
