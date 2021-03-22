@@ -120,7 +120,10 @@ if __name__ == '__main__':
     EMOJI_REGEX = re.compile(emojis)
     emojinsp_df = create_df(raw_tweets, EMOJI_REGEX)
     emojinsp_df['follows?'] = 1
-    shuffled_emojinsp_df = create_shuffled_df(emojinsp_df)
+    split_idx = int(len(emojinsp_df.index)/2)
+    to_shuffle = emojinsp_df.iloc[split_idx:]
+    emojinsp_df = emojinsp_df.iloc[:split_idx] 
+    shuffled_emojinsp_df = create_shuffled_df(to_shuffle)
     emoji_frames = [emojinsp_df, shuffled_emojinsp_df]
     complete_emoji_df = pd.concat(emoji_frames)
     complete_emoji_df.dropna(inplace=True)
