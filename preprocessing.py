@@ -1,4 +1,5 @@
 import re
+import argparse
 import pandas as pd
 import pickle as pkl
 import numpy as np
@@ -20,7 +21,7 @@ def get_raw_tweets(file='tweets.txt'):
     raw_tweets = raw_tweets.split(' <end_of_tweet>\n')
     return raw_tweets
 
-def keep_tweet(tweet):
+def keep_tweet(tweet, emoji_regex=None, single_emoji=False):
     '''
     current criteria for dropping or keeping a tweet
     can be amended but for now: we exclude hashtags as they are OOV,
@@ -33,13 +34,17 @@ def keep_tweet(tweet):
         keep = False
     if len(tweet.split(' ')) < 3:
         keep = False
+    if single_emoji and len(emoji_regex.findall(tweet)) > 1:
+        keep = False
     return keep
 
-def create_emoji_sentence(tweet, emoji_regex):
+def create_emoji_sentence(tweet, emoji_regex, allow_repeats=True):
     '''
     extract emojis used in a sentence to create associated "emoji sentence"
     '''
     emojis = emoji_regex.findall(tweet)
+    if not allow_repeats:
+        emojis = list(set(emojis))
     emoji_sentence = ''.join(emojis)
     return emoji_sentence
 
@@ -55,7 +60,7 @@ def clean_tweet(tweet, emoji_regex):
     cleaned_tweet = USER_HANDLE_REGEX.sub('[USER]', cleaned_tweet)
     return cleaned_tweet
 
-def create_df(raw_tweets, emoji_regex):
+def create_df(raw_tweets, emoji_regex, allow_repeats=True, single_emoji=False):
     '''
     combine above helper functions to create a base emoji df
     '''
@@ -64,13 +69,15 @@ def create_df(raw_tweets, emoji_regex):
     print('{} | Started with {} tweets'.format(dt.now(), tweet_df.shape[0]))
 
     print('{} | Dropping duplicates and unusable tweets.'.format(dt.now()))
-    tweet_filter = tweet_df.tweets.map(keep_tweet)
+    tweet_filter = tweet_df.tweets.apply(lambda row: keep_tweet(row, emoji_regex, single_emoji))
     filtered_df = tweet_df[tweet_filter].copy()
     filtered_df.drop_duplicates(inplace=True)
     print('{} | Ending with {} tweets'.format(dt.now(), filtered_df.shape[0]))
 
     print('{} | Creating emoji sentence'.format(dt.now()))
-    filtered_df['emoji_sentence'] = filtered_df.tweets.apply(lambda row: create_emoji_sentence(row, emoji_regex))
+    filtered_df['emoji_sentence'] = filtered_df.tweets.apply(lambda row: create_emoji_sentence(row, 
+                                                                                               emoji_regex,
+                                                                                               allow_repeats))
 
     print('{} | Cleaning tweets'.format(dt.now()))
     filtered_df['tweets'] = filtered_df.tweets.apply(lambda row: clean_tweet(row, emoji_regex))
@@ -111,6 +118,16 @@ def create_shuffled_df(df):
     return shuffled_df
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Arrange twitter data for emoji nsp task.')
+    parser.add_argument('--allow_repeats',
+                        type=lambda s: s.lower().startswith('t'),
+                        default=True,
+                        help='Whether to allow repeat emojis in sequences, e.g. 😂😂😂.')
+    parser.add_argument('--single_emoji',
+                        type=lambda s: s.lower().startswith('t'),
+                        default=False,
+                        help='Whether to drop sequences that consist of more than one emojis, e.g. 😘🌻🤗.')
+    args = parser.parse_args()
     raw_tweets = get_raw_tweets()
     emoji_list, _ = load_emojis()
     emojis =  '|'.join(emoji_list) 
@@ -118,7 +135,7 @@ if __name__ == '__main__':
     # is interpreted as wildcard and causes more trouble than it's worth
     emojis = emojis[:3569] + emojis[3574:]
     EMOJI_REGEX = re.compile(emojis)
-    emojinsp_df = create_df(raw_tweets, EMOJI_REGEX)
+    emojinsp_df = create_df(raw_tweets, EMOJI_REGEX, args.allow_repeats, args.single_emoji)
     emojinsp_df['follows?'] = 1
     split_idx = int(len(emojinsp_df.index)/2)
     to_shuffle = emojinsp_df.iloc[split_idx:]
@@ -126,5 +143,16 @@ if __name__ == '__main__':
     shuffled_emojinsp_df = create_shuffled_df(to_shuffle)
     emoji_frames = [emojinsp_df, shuffled_emojinsp_df]
     complete_emoji_df = pd.concat(emoji_frames)
+    # included twice because dropna doesn't exclude all NaN values on single try
+    # for whatever reason
     complete_emoji_df.dropna(inplace=True)
-    complete_emoji_df.to_csv('emoji_nsp_dataset.csv', index = False)
+    if not args.allow_repeats:
+        filename = 'emoji_nsp_dataset_no_repeats.csv'
+    elif args.single_emoji:
+        filename = 'emoji_nsp_dataset_single_emoji.csv'
+    else:
+        filename = 'emoji_nsp_dataset.csv'
+    complete_emoji_df.to_csv(filename, index = False)
+    print('{} | Saved {}, containing {} rows'.format(dt.now(), filename, complete_emoji_df.shape[0]))
+
+
