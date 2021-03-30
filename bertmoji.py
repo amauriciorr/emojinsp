@@ -1,3 +1,5 @@
+# Antonio Robayo
+# amr1059
 import os
 import logging
 import pandas as pd
@@ -74,17 +76,17 @@ class bertmoji(nn.Module):
         return logits
 
 class trainer(object):
-    def __init__(self, model, device, criterion, train, val, test):
+    def __init__(self, model, device, criterion, train_data, val_data, test_data):
         self.model = model
         self.device = device
         self.criterion = criterion
-        self.train = train
-        self.val = val
-        self.test = test
+        self.train_data = train_data
+        self.val_data = val_data
+        self.test_data = test_data
     def train_step(self, batch_size, optimizer):
         self.model.to(self.device)
         self.model.train()
-        train_loader = get_loader(self.train, batch_size)
+        train_loader = get_loader(self.train_data, batch_size)
         train_loss_cache = []
         y_preds = []
         y_truth = []
@@ -93,16 +95,19 @@ class trainer(object):
             batch = tuple(t.to(self.device) for t in batch)
             input_ids, attention_masks, labels = batch
             logits = self.model(input_ids, attention_masks)
-            logits = logits.type(torch.LongTensor).to(self.device)
+            logits = logits.to(self.device)
             labels = labels.type_as(logits)
             loss = self.criterion(logits.squeeze(-1), labels)
             loss.backward()
             optimizer.step()
-
             preds = torch.round(torch.sigmoid(logits))
             y_preds += preds.view(-1).tolist()
             y_truth += labels.tolist()
             train_loss_cache.append(loss.item())
+            current_avg_loss = np.mean(train_loss_cache)
+            if step % 100 == 0:
+                print('{} | Avg. BCE loss: {} | {}/{}'.format(dt.now(tz=TIMEZONE), current_avg_loss, 
+                                                              step, len(train_loader)))
         evaluated_loss = np.mean(train_loss_cache)
         f1, accuracy = calculate_metrics(y_truth, y_preds)
         return evaluated_loss, f1, accuracy
@@ -110,9 +115,9 @@ class trainer(object):
         self.model.to(self.device)
         self.model.eval()
         if use_test:
-            loader = get_loader(self.test, batch_size)
+            loader = get_loader(self.test_data, batch_size)
         else:
-            loader = get_loader(self.val, batch_size)
+            loader = get_loader(self.val_data, batch_size)
         eval_loss_cache = []
         y_preds = []
         y_truth = []
@@ -132,7 +137,7 @@ class trainer(object):
         f1, accuracy = calculate_metrics(y_truth, y_preds)
         return evaluated_loss, f1, accuracy
 
-    def train(self, batch_size, epochs, optimizer, weight_decay, patience, save_path='./'):
+    def train(self, batch_size, epochs, optimizer, patience, save_path='./'):
         best_val_loss = np.inf
         patience_counter = 0
         train_performance = {'loss':[], 'f1':[], 'accuracy':[]}
@@ -145,6 +150,10 @@ class trainer(object):
             train_performance['accuracy'].append(accuracy)
             previous_val_loss = best_val_loss
             best_val_loss, val_f1, val_accuracy = self.evaluate_step(batch_size)
+            print('{} | Validation loss: {}, F1: {}, Accuracy: {}'.format(dt.now(tz=TIMEZONE), 
+                                                                          best_val_loss,
+                                                                          val_f1,
+                                                                          val_accuracy))
             valid_performance['loss'].append(loss)
             valid_performance['f1'].append(f1)
             valid_performance['accuracy'].append(accuracy)
@@ -230,4 +239,4 @@ if __name__ == '__main__':
         print('F1 score: {}'.format(f1))
         print('Accuracy: {}'.format(accuracy))
     else:
-        bertmoji_trainer.train(args.batch_size, args.epochs, args.learning_rate, args.weight_decay, args.patience, save_path=SCRATCH)
+        bertmoji_trainer.train(args.batch_size, args.num_epochs, optimizer, args.patience, save_path=SCRATCH)
