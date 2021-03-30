@@ -234,7 +234,7 @@ if __name__ == '__main__':
     optimizer = optim.Adam(bertmoji_classifier.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     bertmoji_trainer = trainer(bertmoji_classifier, device, bceloss, tokenized_train, tokenized_valid, tokenized_test)
     if args.evaluate_only:
-        evaluated_loss, f1, accuracy = bertmoji_trainer.evaluate_step(batch_size=32, use_test=True)
+        evaluated_loss, f1, accuracy = bertmoji_trainer.evaluate_step(batch_size=args.batch_size, use_test=True)
         print('Avg. BCE loss: {}'.format(evaluated_loss))
         print('F1 score: {}'.format(f1))
         print('Accuracy: {}'.format(accuracy))
