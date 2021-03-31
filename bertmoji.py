@@ -1,6 +1,7 @@
 # Antonio Robayo
 # amr1059
 import os
+from copy import copy
 import logging
 import pandas as pd
 import pytz
@@ -148,8 +149,10 @@ class trainer(object):
             train_performance['loss'].append(loss)
             train_performance['f1'].append(f1)
             train_performance['accuracy'].append(accuracy)
-            previous_val_loss = best_val_loss
-            best_val_loss, val_f1, val_accuracy = self.evaluate_step(batch_size)
+            previous_val_loss = copy(best_val_loss)
+            avg_val_loss, val_f1, val_accuracy = self.evaluate_step(batch_size)
+            if avg_val_loss < best_val_loss:
+                best_val_loss = copy(avg_val_loss)
             print('{} | Validation loss: {}, F1: {}, Accuracy: {}'.format(dt.now(tz=TIMEZONE), 
                                                                           best_val_loss,
                                                                           val_f1,
