@@ -91,7 +91,6 @@ class trainer(object):
         train_loss_cache = []
         y_preds = []
         y_truth = []
-        optimizer.zero_grad()
         for step, batch in enumerate(train_loader):
             batch = tuple(t.to(self.device) for t in batch)
             input_ids, attention_masks, labels = batch
@@ -99,16 +98,19 @@ class trainer(object):
             logits = logits.to(self.device)
             labels = labels.type_as(logits)
             loss = self.criterion(logits.squeeze(-1), labels)
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             preds = torch.round(torch.sigmoid(logits))
-            y_preds += preds.view(-1).tolist()
+            preds = preds.view_as(labels)
+            acc  = preds.eq(labels).sum().item() / labels.size(0)
+            y_preds += preds.tolist()
             y_truth += labels.tolist()
             train_loss_cache.append(loss.item())
-            current_avg_loss = np.mean(train_loss_cache)
+            current_avg_loss = np.sum(train_loss_cache) / (step + 1)
             if step % 100 == 0:
-                print('{} | Avg. BCE loss: {} | {}/{}'.format(dt.now(tz=TIMEZONE), current_avg_loss, 
-                                                              step, len(train_loader)))
+                print('{} | Avg. BCE loss: {}, Accuracy: {} | {}/{}'.format(dt.now(tz=TIMEZONE), current_avg_loss, 
+                                                                            acc, step, len(train_loader)))
         evaluated_loss = np.mean(train_loss_cache)
         f1, accuracy = calculate_metrics(y_truth, y_preds)
         return evaluated_loss, f1, accuracy
@@ -131,10 +133,11 @@ class trainer(object):
             loss = self.criterion(logits.squeeze(-1), labels)
             
             preds = torch.round(torch.sigmoid(logits))
-            y_preds += preds.view(-1).tolist()
+            preds = preds.view_as(labels)
+            y_preds += preds.tolist()
             y_truth += labels.tolist()
             eval_loss_cache.append(loss.item())
-        evaluated_loss = np.mean(eval_loss_cache)
+        evaluated_loss = np.sum(eval_loss_cache) / len(loader)
         f1, accuracy = calculate_metrics(y_truth, y_preds)
         return evaluated_loss, f1, accuracy
 
@@ -161,8 +164,10 @@ class trainer(object):
             valid_performance['f1'].append(f1)
             valid_performance['accuracy'].append(accuracy)
             if patience_counter > patience:
+                print('{} | Stopping early.'.format(dt.now(tz=TIMEZONE)))
                 break
             if best_val_loss < previous_val_loss:
+                print('{} | Saving model...'.format(dt.now(tz=TIMEZONE)))
                 torch.save({'model': self.model.state_dict(),
                             'train_performance': train_performance,
                             'valid_performance': valid_performance}, save_path + 'bertmoji.pt')
