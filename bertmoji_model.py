@@ -141,7 +141,7 @@ class trainer(object):
         f1, accuracy = calculate_metrics(y_truth, y_preds)
         return evaluated_loss, f1, accuracy
 
-    def train(self, batch_size, epochs, optimizer, patience, save_path='./'):
+    def train(self, batch_size, epochs, optimizer, patience, data_source, save_path='./'):
         best_val_loss = np.inf
         patience_counter = 0
         train_performance = {'loss':[], 'f1':[], 'accuracy':[]}
@@ -170,7 +170,7 @@ class trainer(object):
                 print('{} | Saving model...'.format(dt.now(tz=TIMEZONE)))
                 torch.save({'model': self.model.state_dict(),
                             'train_performance': train_performance,
-                            'valid_performance': valid_performance}, save_path + 'bertmoji.pt')
+                            'valid_performance': valid_performance}, save_path + data_source + '-bertmoji.pt')
                 patience_counter = 0
             else:
                 patience_counter += 1
@@ -214,6 +214,7 @@ if __name__ == '__main__':
                         type=str,
                         default='full',
                         help='Data to use for training.')
+    # TO-DO add argument + logic for loading fine-tuned model
     args = parser.parse_args()
 
     if args.logging_file:
@@ -232,6 +233,9 @@ if __name__ == '__main__':
     MODEL = "cardiffnlp/twitter-roberta-base"
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModel.from_pretrained(MODEL)
+    # make [USER] a token to be learned rather than treating as unknown
+    tokenizer.add_tokens(["[USER]"])
+    model.resize_token_embeddings(len(tokenizer)) 
 
     tokenized_test = tokenize_data(test, tokenizer, max_sentence_length=args.max_sentence_length)
     tokenized_valid = tokenize_data(valid, tokenizer, max_sentence_length=args.max_sentence_length)
@@ -247,4 +251,4 @@ if __name__ == '__main__':
         print('F1 score: {}'.format(f1))
         print('Accuracy: {}'.format(accuracy))
     else:
-        bertmoji_trainer.train(args.batch_size, args.num_epochs, optimizer, args.patience, save_path=SCRATCH)
+        bertmoji_trainer.train(args.batch_size, args.num_epochs, optimizer, args.patience, args.data_source, save_path=SCRATCH)
