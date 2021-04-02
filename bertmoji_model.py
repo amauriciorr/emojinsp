@@ -15,10 +15,15 @@ from sklearn.metrics import f1_score, accuracy_score
 from torch.utils.data import Dataset, DataLoader, TensorDataset, RandomSampler
 from transformers import AutoTokenizer, AutoModel
 
+# for logging purposes
 TIMEZONE = pytz.timezone('America/New_York')
 SCRATCH = os.environ['SCRATCH'] + '/'
 
 def get_data_path(source):
+    '''
+    helper function for easily loading file path to
+    specific data split
+    '''
     data_source = {'multiple':'data/multi_emoji/',
                    'single':'data/single_emoji/',
                    'full':'data/full_data/',
@@ -33,17 +38,27 @@ def get_data_path(source):
     return train, valid, test
 
 def calculate_metrics(y_truth, y_preds):
+    '''
+    calculate F1 scorea and accuracy in a single execution
+    '''
     f1 = f1_score(y_truth, y_preds)
     accuracy = accuracy_score(y_truth, y_preds)
     return f1, accuracy
 
 def show_quantiles(df, column):
+    '''
+    function used for exploratory analysis, mainly to determine
+    max sentence length for text component of tweets
+    '''
     percentiles = [0.5, 0.75, 0.95, 1]
     print('Percentiles for: {}'.format(column))
     for i in percentiles:
         print('{}th percentile: {}'.format(i*100 ,df[column].map(lambda x: len(x)).quantile(q = i)))
 
 def tokenize_data(df, tokenizer, max_sentence_length=225):
+    '''
+    function to fokenize tweets and emoji sentence. also returns attention mask
+    '''
     df_ = df.copy()
     df_.dropna(inplace = True)
     tweets = df_['tweets'] + ' ' + tokenizer.sep_token + ' ' + df_['emoji_sentence']
@@ -65,6 +80,9 @@ def get_loader(dataset, batch_size):
     return loader
 
 class bertmoji(nn.Module):
+    '''
+    RoBERTa  model that adds a linear layer for binary classification.
+    '''
     def __init__(self, roberta, num_classes=1):
         super().__init__()
         self.roberta = roberta
@@ -72,11 +90,15 @@ class bertmoji(nn.Module):
         self.W = nn.Linear(roberta.config.hidden_size, num_classes)
     def forward(self, input_ids, attention_mask):
         h_cls = self.roberta(input_ids=input_ids, attention_mask=attention_mask)[1]
-        # h_cls = h_cls_pool[:, 0]
         logits = self.dropout(self.W(h_cls))
         return logits
 
 class trainer(object):
+    '''
+    trainer class for executing train-step and evaluation-step (either validation or test).
+    these aforementioned steps are included in the training-loop as well. patience
+    is used for early stopping.
+    '''
     def __init__(self, model, device, criterion, train_data, val_data, test_data):
         self.model = model
         self.device = device
