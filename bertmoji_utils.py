@@ -7,8 +7,9 @@ def load_model(checkpoint_path):
     train_performance = checkpoint['train_performance']
     valid_performance = checkpoint['valid_performance']
     model = AutoModel.from_pretrained(MODEL)
-    model.load_state_dict(checkpoint['model'])
-    return model, train_performance, valid_performance
+    bertmoji_classifier = bertmoji(model)
+    bertmoji_classifier.load_state_dict(checkpoint['model'])
+    return bertmoji_classifier, train_performance, valid_performance
 
 def tokenize_data(data, tokenizer, return_df=False):
     '''
