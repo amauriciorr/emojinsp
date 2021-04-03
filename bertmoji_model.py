@@ -236,7 +236,6 @@ if __name__ == '__main__':
                         type=str,
                         default='full',
                         help='Data to use for training.')
-    # TO-DO add argument + logic for loading fine-tuned model
     args = parser.parse_args()
 
     if args.logging_file:
