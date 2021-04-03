@@ -236,6 +236,10 @@ if __name__ == '__main__':
                         type=str,
                         default='full',
                         help='Data to use for training.')
+    parser.add_argument('--model_path', 
+                        type=str,
+                        default=None,
+                        help='Path to load fine-tuned model checkpoint.')
     args = parser.parse_args()
 
     if args.logging_file:
@@ -264,6 +268,10 @@ if __name__ == '__main__':
 
     bceloss = nn.BCEWithLogitsLoss()
     bertmoji_classifier = bertmoji(model)
+    if args.model_path:
+        checkpoint = torch.load(args.model_path)['model']
+        bertmoji_classifier.load_state_dict(checkpoint)
+
     optimizer = optim.Adam(bertmoji_classifier.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     bertmoji_trainer = trainer(bertmoji_classifier, device, bceloss, tokenized_train, tokenized_valid, tokenized_test)
     if args.evaluate_only:
