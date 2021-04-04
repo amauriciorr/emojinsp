@@ -45,7 +45,7 @@ def calculate_metrics(y_truth, y_preds):
     accuracy = accuracy_score(y_truth, y_preds)
     return f1, accuracy
 
-def show_quantiles(df, column):
+def show_quantiles(df, column, emoji=False):
     '''
     function used for exploratory analysis, mainly to determine
     max sentence length for text component of tweets
@@ -53,7 +53,10 @@ def show_quantiles(df, column):
     percentiles = [0.5, 0.75, 0.95, 1]
     print('Percentiles for: {}'.format(column))
     for i in percentiles:
-        print('{}th percentile: {}'.format(i*100 ,df[column].map(lambda x: len(x)).quantile(q = i)))
+        if emoji:
+            print('{}th percentile: {}'.format(i*100 ,df[column].map(lambda x: len(list(x))).quantile(q = i)))
+        else:
+            print('{}th percentile: {}'.format(i*100 ,df[column].map(lambda x: len(x.split(' '))).quantile(q = i)))
 
 def tokenize_data(df, tokenizer, max_sentence_length=225):
     '''
