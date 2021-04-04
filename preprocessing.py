@@ -21,6 +21,19 @@ def get_raw_tweets(file='tweets.txt'):
     raw_tweets = raw_tweets.split(' <end_of_tweet>\n')
     return raw_tweets
 
+def show_quantiles(df, column, emoji=False):
+    '''
+    function used for exploratory analysis, mainly to determine
+    max sentence length for text component of tweets
+    '''
+    percentiles = [0.5, 0.75, 0.95, 1]
+    print('Percentiles for: {}'.format(column))
+    for i in percentiles:
+        if emoji:
+            print('{}th percentile: {}'.format(i*100 ,df[column].map(lambda x: len(list(x))).quantile(q = i)))
+        else:
+            print('{}th percentile: {}'.format(i*100 ,df[column].map(lambda x: len(x.split(' '))).quantile(q = i)))
+
 def keep_tweet(tweet, emoji_regex=None, single_emoji=False, multiple_emoji=False):
     '''
     current criteria for dropping or keeping a tweet
