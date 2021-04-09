@@ -1,6 +1,7 @@
 from bertmoji_model import * 
 
 MODEL = "cardiffnlp/twitter-roberta-base"
+LABEL_MAPPING = {1.0:'Y', 0.0:'N'}
 
 def load_model(checkpoint_path):
     '''
@@ -44,7 +45,7 @@ def tokenize_data(data, tokenizer, return_df=False):
     else:
         return TensorDataset(tokenized_tweets, attn_masks)
 
-def run_batch(model, data, tokenizer, device):
+def run_batch(model, data, tokenizer, device, human_readable=False):
     '''
     wrap tokenize_data in a single test-execution
     '''
@@ -59,6 +60,8 @@ def run_batch(model, data, tokenizer, device):
         logits = model(input_ids, attention_masks)
         logits = logits.to(device)
         preds = torch.round(torch.sigmoid(logits))
-        predictions += preds.tolist()
+        predictions.append(preds.item())
     df['predictions'] = predictions
+    if human_readable:
+        df['predictions'] = df['predictions'].map(LABEL_MAPPING)
     return df
