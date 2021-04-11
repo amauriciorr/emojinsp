@@ -10,4 +10,12 @@
     * `--interval_size`: number of tweets to collect per iteration, default to 500
     * `--sleep_time`: amount of time in seconds to sleep between each iteration, default to 30 seconds
  
-NOTE: There appears to be a limit to the number of words one can filter for when opening a Twitter stream (roughly 400 words). To account for this, `collect_tweets.py` iterates through our collection of emojis in chunks of size-400. Since there are ~3600 emojis, there are 9 total iterations.
+NOTE: There appears to be a limit to the number of words one can filter for when opening a Twitter stream (roughly 400 words). To account for this, `collect_tweets.py` iterates through our collection of emojis in chunks of size-400. Since there are roughly 3600 emojis, there are 9 total iterations.
+
+* `preprocessing.py`: cleans tweets by removing URLs, dropping tweets less than 3 words long, replacing user-handles with `[USER]` token. constructs our four different datasets: full (single + multi), no repeats, single, multi.
+
+### RoBERTa-based model
+* `bertmoji_model.py`: includes model class for emoji-NSP, as well as trainer class for either fully executing train loop or individual train and evaluation steps.
+* `bertmoji_utils.py`: helper functions for loading fine-tuned bertmoji model and loading individual examples for the purposes of probing and analyzing.
+
+
