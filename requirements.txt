@@ -1,2 +1,4 @@
 tweepy
 beautifulsoup4
+transformers
+torch
