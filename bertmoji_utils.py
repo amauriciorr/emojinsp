@@ -1,4 +1,4 @@
-from bertmoji_model import * 
+ffrom bertmoji_model import * 
 
 MODEL = "cardiffnlp/twitter-roberta-base"
 LABEL_MAPPING = {1.0:'Y', 0.0:'N'}
@@ -26,7 +26,8 @@ def load_model(checkpoint_path):
 
 def tokenize_data(data, tokenizer, return_df=False):
     '''
-    function to fokenize tweets and emoji sentence. also returns attention mask
+    function to tokenize tweets and emoji sentence, also creates attention mask.
+    data is returned as a TensorDataset.
     '''
     df_ = pd.DataFrame(data, columns = ['tweet', 'emoji_sentence'])
     tweets = df_['tweet'] + ' ' + tokenizer.sep_token + ' ' + df_['emoji_sentence']
@@ -47,7 +48,8 @@ def tokenize_data(data, tokenizer, return_df=False):
 
 def run_batch(model, data, tokenizer, device, human_readable=False):
     '''
-    wrap tokenize_data in a single test-execution
+    wrap tokenize_data in a single test-execution, return results in a dataframe
+    for analysis
     '''
     dataset, df = tokenize_data(data, tokenizer, return_df=True)
     loader = DataLoader(dataset, batch_size=1)
