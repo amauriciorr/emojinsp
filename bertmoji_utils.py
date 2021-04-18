@@ -1,4 +1,4 @@
-ffrom bertmoji_model import * 
+from bertmoji_model import * 
 
 MODEL = "cardiffnlp/twitter-roberta-base"
 LABEL_MAPPING = {1.0:'Y', 0.0:'N'}
@@ -34,7 +34,7 @@ def tokenize_data(data, tokenizer, return_df=False):
     else:
         df_ = pd.DataFrame(data, columns = ['tweet', 'emoji_sentence'])
     tweets = df_['tweet'] + ' ' + tokenizer.sep_token + ' ' + df_['emoji_sentence']
-    max_sentence_length = tweets.str.len().max()
+    max_sentence_length = int(tweets.str.len().max())
     tokenized_tweets = []
     attn_masks = []
     for idx, tweet in tweets.items():
@@ -66,7 +66,9 @@ def run_batch(model, data, tokenizer, device, human_readable=False):
         logits = logits.to(device)
         preds = torch.round(torch.sigmoid(logits))
         predictions.append(preds.item())
-    df['predictions'] = predictions
+    df['prediction'] = predictions
     if human_readable:
-        df['predictions'] = df['predictions'].map(LABEL_MAPPING)
+        df['prediction'] = df['prediction'].map(LABEL_MAPPING)
+        if 'label' in df.columns:
+            df['label'] = df['label'].map(LABEL_MAPPING)
     return df
