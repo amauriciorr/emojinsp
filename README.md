@@ -17,5 +17,9 @@ NOTE: There appears to be a limit to the number of words one can filter for when
 ### RoBERTa-based model
 * `bertmoji_model.py`: includes model class for emoji-NSP, as well as trainer class for either fully executing train loop or individual train and evaluation steps.
 * `bertmoji_utils.py`: helper functions for loading fine-tuned bertmoji model and loading individual examples for the purposes of probing and analyzing.
+* `RoBERTa_error_analysis.ipynb` : preliminary error analysis done on RoBERTa model
 
-
+### Logistic Regression model
+* `logistic_regression_preprocess_embeddings.ipynb`: includes preprocessing, tokenization, averaged/concatenated embeddings for text and emojis - separately done for all four datasets.
+* `logistic_regression_model_prediction.ipynb`: baseline and finetuned logistic regression model results for all four datasets, using averaged/concatenated embeddings.
+* `logistic_regression_error_analysis.ipynb`: preliminary error analysis done on the best result (full data with averaged embeddings)
