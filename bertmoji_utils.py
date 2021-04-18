@@ -29,7 +29,10 @@ def tokenize_data(data, tokenizer, return_df=False):
     function to tokenize tweets and emoji sentence, also creates attention mask.
     data is returned as a TensorDataset.
     '''
-    df_ = pd.DataFrame(data, columns = ['tweet', 'emoji_sentence'])
+    if isinstance(data, pd.DataFrame):
+        df_ = data.copy()
+    else:
+        df_ = pd.DataFrame(data, columns = ['tweet', 'emoji_sentence'])
     tweets = df_['tweet'] + ' ' + tokenizer.sep_token + ' ' + df_['emoji_sentence']
     max_sentence_length = tweets.str.len().max()
     tokenized_tweets = []

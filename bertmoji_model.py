@@ -66,7 +66,7 @@ def tokenize_data(df, tokenizer, max_sentence_length=225):
 
 def get_loader(dataset, batch_size):
     sampler = RandomSampler(dataset)
-    loader = DataLoader(dataset,sampler=sampler, batch_size=batch_size)
+    loader = DataLoader(dataset, sampler=sampler, batch_size=batch_size)
     return loader
 
 class bertmoji(nn.Module):
