@@ -1,4 +1,9 @@
 # Emoji NSP
+
+This repo contains a research project for DS-GA 1012 (Natural Language Understanding). Our goal was to learn rich emoji representations through an entailement-relation/ NSP-style binary classification task.  Our paper is included in the repo as well. Below is our abstract:
+
+> NLP research on emojis has mostly focused on emotional information that emojis capture or has attempted to associate large chunks of text with a single emoji. We hypothesize that a single emoji is unable to distinctly capture and represent meaning that is context-specific when used in text-based messages. We ex- periment with an NSP-style binary classifica- tion task, leveraging different embedding tech- niques, and in support of our hypothesis, we find that our models learn better representa- tions when trained on sequences of emojis rather than single emojis.
+
 ## Getting Started
 1. Make sure to install related dependencies
 `pip install -r requirements.txt`
@@ -14,6 +19,7 @@ NOTE: There appears to be a limit to the number of words one can filter for when
 
 * `preprocessing.py`: cleans tweets by removing URLs, dropping tweets less than 3 words long, replacing user-handles with `[USER]` token. constructs our four different datasets: full (single + multi), no repeats, single, multi.
 
+## Models
 ### RoBERTa-based model
 * `bertmoji_model.py`: includes model class for emoji-NSP, as well as trainer class for either fully executing train loop or individual train and evaluation steps.
 * `bertmoji_utils.py`: helper functions for loading fine-tuned bertmoji model and loading individual examples for the purposes of probing and analyzing.
