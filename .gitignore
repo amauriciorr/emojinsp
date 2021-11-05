@@ -1,0 +1,8 @@
+.ipynb_checkpoints
+__pycache__
+data/full_data/
+data/multi_emoji/
+data/no_repeats/
+data/single_emoji/
+tweets.txt
+emoji handcrafted raw/
