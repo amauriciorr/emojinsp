@@ -8,6 +8,9 @@ from datetime import datetime as dt
 from emoji_util import load_emojis, chunks
 
 class TwitterListener(StreamListener):
+    '''
+    class for streaming and saving tweets
+    '''
     def __init__(self, interval_size):
         self.tweet_count = 0
         self.interval_size = interval_size
