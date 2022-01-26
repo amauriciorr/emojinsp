@@ -33,3 +33,5 @@ NOTE: There appears to be a limit to the number of words one can filter for when
 ## Results
 Detailed explanation of our experimentation, analysis, and results can be found in our paper (`nul_emojinsp.pdf`). The bertmoji (i.e. RoBERTa-base model) perfromed the best, achieving as high as `0.818` accuracy. Below is a small collection of example predictions made for text-emoji pairs
 ![bertmoji-predictions](/assets/bertmoji-predictions.png)
+
+We observe that while the model was able to learn rich emoji representations, like the 🦈 emoji corresponding with the word "shark" and 😋 corresponding with positive sentiment, we also observe shortcomings. In particular we observe that the embedding representation for 🇨🇦, while correctly understood to be related to a location/place, doesn't appropriately match its actual geographic designation. 
