@@ -7,6 +7,9 @@ LINKS = ['http://www.unicode.org/emoji/charts/full-emoji-list.html',
          'https://www.unicode.org/emoji/charts/full-emoji-modifiers.html']
 
 def scrape_emojis(link):
+    '''
+    function for scraping comprehensive list of emojis, including skin tone varieties
+    '''
     emojis = []
     unicode_vals = []
     page = requests.get(link)
@@ -31,14 +34,19 @@ def gather_emojis():
     return all_emojis, all_unicode
 
 def load_emojis():
+    '''
+    helper function for loading emoji text and unicode versions of emojis
+    '''
     all_emojis = pkl.load(open('emoji_symbols.p', 'rb'))
     all_unicode = pkl.load(open('emoji_unicode.p', 'rb'))
     all_unicode = list(map(lambda s: s.upper(), all_unicode))
     return all_emojis, all_unicode
 
 def chunks(lst, n):
-    # https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
-    """Yield successive n-sized chunks from lst."""
+    """
+    taken from: https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
+    Yield successive n-sized chunks from list.
+    """
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
