@@ -1,8 +1,12 @@
 .ipynb_checkpoints
 __pycache__
+# ignore source twitter data to avoid DMCA issues
 data/full_data/
 data/multi_emoji/
 data/no_repeats/
 data/single_emoji/
 tweets.txt
+# ignore user-submitted but unpublished text-to-emoji pairs
 emoji handcrafted raw/
+# ignore large checkpoint files / pretrained models
+*.pt
