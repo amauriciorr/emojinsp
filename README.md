@@ -29,3 +29,7 @@ NOTE: There appears to be a limit to the number of words one can filter for when
 * `logistic_regression_preprocess_embeddings.ipynb`: includes preprocessing, tokenization, averaged/concatenated embeddings for text and emojis - separately done for all four datasets.
 * `logistic_regression_model_prediction.ipynb`: baseline and finetuned logistic regression model results for all four datasets, using averaged/concatenated embeddings.
 * `logistic_regression_error_analysis.ipynb`: preliminary error analysis done on the best result (full data with averaged embeddings)
+
+## Results
+Detailed explanation of our experimentation, analysis, and results can be found in our paper (`nul_emojinsp.pdf`). The bertmoji (i.e. RoBERTa-base model) perfromed the best, achieving as high as `0.818` accuracy. Below is a small collection of example predictions made for text-emoji pairs
+![bertmoji-predictions](/assets/bertmoji-predictions.png)
