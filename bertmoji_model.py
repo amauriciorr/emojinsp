@@ -39,7 +39,7 @@ def get_data_path(source):
 
 def calculate_metrics(y_truth, y_preds):
     '''
-    calculate F1 scorea and accuracy in a single execution
+    calculate F1 score and accuracy in a single execution
     '''
     f1 = f1_score(y_truth, y_preds)
     accuracy = accuracy_score(y_truth, y_preds)
